@@ -18,8 +18,7 @@ const registerProf = async (email, password, name, signature) => {
     data: formData,
   };
   return $.ajax(settings).done((res) => {
-    console.log(res);
-    return res.responseJSON;
+    return JSON.parse(res);
   });
 };
 
@@ -49,7 +48,7 @@ const login = async (email, password) => {
     dataType: "json",
   }).done((res) => {
     console.log(res);
-    return res.responseJSON;
+    return res;
   });
 };
 

@@ -23,8 +23,8 @@ const UploadSign = () => {
       file
     )
       .then((res) => {
+        res = JSON.parse(res);
         setCookie("token", res.token);
-
         return navigate("/dashboard");
       })
       .catch((error) => {

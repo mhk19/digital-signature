@@ -18,3 +18,8 @@ export function getCookie(key) {
   const cookies = parseCookies();
   return cookies[`${key}`];
 }
+
+export function removeCookie(key) {
+  const cookieRemoveString = `${key}= ; expires = Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+  document.cookie = cookieRemoveString;
+}

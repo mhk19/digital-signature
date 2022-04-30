@@ -3,10 +3,16 @@ import Login from "./login";
 import TypeSelection from "./type-selection";
 import Register from "./registration";
 import UploadSign from "./upload-sign";
-import { getCookie } from "../utils/handleCookies";
+import { getCookie, removeCookie } from "../utils/handleCookies";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { getUser } from "../api/authApi";
+import { SetUserLoggedIn } from "../actions/userActions";
 
 const AuthPage = () => {
   const [type, setType] = useState("login");
+  const navigate = useNavigate();
+  var dispatch = useDispatch();
   const [loginHighlightClasses, setLoginHighlightClasses] = useState(
     "border border-[#1D88E3] text-[#1D88E3]"
   );
@@ -30,6 +36,22 @@ const AuthPage = () => {
     setSignupHighlightClasses("border border-[#99999940] text-[#666666]");
     setType("login");
   };
+
+  useEffect(async () => {
+    var token = getCookie("token");
+    if (token) {
+      await getUser(token)
+        .then((res) => {
+          dispatch(
+            SetUserLoggedIn({ name: res.name, id: res.id, isProf: res.isProf })
+          );
+          navigate("/dashboard");
+        })
+        .catch((err) => {
+          removeCookie("token");
+        });
+    }
+  });
 
   return (
     <div className="flex flex-row">

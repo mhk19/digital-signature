@@ -3,6 +3,7 @@ import "../styles/type-selection.css";
 import { useSelector } from "react-redux";
 import { registerStudent } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
+import { setCookie } from "../utils/handleCookies";
 
 const TypeSelection = (props) => {
   let navigate = useNavigate();
@@ -14,6 +15,7 @@ const TypeSelection = (props) => {
       registerProfileStore.name
     )
       .then((res) => {
+        setCookie("token", res.token);
         return navigate("/dashboard");
       })
       .catch((error) => {

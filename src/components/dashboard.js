@@ -4,15 +4,19 @@ import React, { useEffect, useState } from "react";
 import RequestCol from "./request-col";
 import upload_icon from "../assets/images/upload.svg";
 import { getProfs, getUser } from "../api/authApi";
-import { getCookie } from "../utils/handleCookies";
+import { getCookie, removeCookie } from "../utils/handleCookies";
 import { useNavigate } from "react-router-dom";
 import { SetUserLoggedIn } from "../actions/userActions";
 import { useDispatch, useSelector } from "react-redux";
 import { getFirstLetter } from "../utils/username";
 import {
-  getDocuments,
+  getPendingDocumentsForProf,
+  getDocumentsForStudent,
+  getSingleDocument,
   postDocument,
   requestSignature,
+  getRejectedDocumentsForProf,
+  getSignedDocumentsForProf,
 } from "../api/documentApi";
 
 const { Option } = Select;
@@ -26,6 +30,7 @@ const Dashboard = () => {
   const [approvedDocument, setApprovedDocuments] = useState([]);
   const [rejectedDocument, setRejectedDocuments] = useState([]);
   const [docsToShow, setDocsToShow] = useState([]);
+  const [isPendingTab, setPendingTab] = useState(true);
   const navigate = useNavigate();
   var dispatch = useDispatch();
   const userStore = useSelector((state) => state.userStore);
@@ -37,18 +42,20 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
+  useEffect(async () => {
     var token = getCookie("token");
-    getUser(token)
+    var isProf;
+    await getUser(token)
       .then((res) => {
         dispatch(
           SetUserLoggedIn({ name: res.name, id: res.id, isProf: res.isProf })
         );
+        isProf = res.isProf;
       })
       .catch((err) => {
         navigate("/");
       });
-    getProfs(token)
+    await getProfs(token)
       .then((res) => {
         setChildrenProfs([
           ...childrenProfs,
@@ -58,24 +65,60 @@ const Dashboard = () => {
       .catch((err) => {
         console.log("Error in fetching profs", err);
       });
-    getDocuments(getCookie("token")).then((res) => {
-      setPendingDocument([
-        ...res.filter(
-          (document) => document.document_status === "PendingApproval"
-        ),
-      ]);
-      setApprovedDocuments([
-        ...res.filter((document) => document.document_status === "Approved"),
-      ]);
-      setRejectedDocuments([
-        ...res.filter((document) => document.document_status === "Rejected"),
-      ]);
-      setDocsToShow([
-        ...res.filter(
-          (document) => document.document_status === "PendingApproval"
-        ),
-      ]);
-    });
+    if (isProf) {
+      await getPendingDocumentsForProf(token).then((res) => {
+        var pendingDocumentsTemp = [];
+        res.forEach(async (document) => {
+          await getSingleDocument(token, document.id).then((res) => {
+            pendingDocumentsTemp.push(res);
+          });
+          console.log(pendingDocumentsTemp);
+          setPendingDocument([...pendingDocumentsTemp]);
+          setDocsToShow([...pendingDocumentsTemp]);
+        });
+      });
+
+      await getSignedDocumentsForProf(token).then((res) => {
+        var signedDocumentsTemp = [];
+        res.forEach(async (document) => {
+          await getSingleDocument(token, document.id).then((res) => {
+            signedDocumentsTemp.push(res);
+          });
+          console.log(signedDocumentsTemp);
+          setApprovedDocuments([...signedDocumentsTemp]);
+        });
+      });
+
+      await getRejectedDocumentsForProf(token).then((res) => {
+        var rejectedDocumentsTemp = [];
+        res.forEach(async (document) => {
+          await getSingleDocument(token, document.id).then((res) => {
+            rejectedDocumentsTemp.push(res);
+          });
+          console.log(rejectedDocumentsTemp);
+          setRejectedDocuments([...rejectedDocumentsTemp]);
+        });
+      });
+    } else {
+      getDocumentsForStudent(getCookie("token")).then((res) => {
+        setPendingDocument([
+          ...res.filter(
+            (document) => document.document_status === "PendingApproval"
+          ),
+        ]);
+        setApprovedDocuments([
+          ...res.filter((document) => document.document_status === "Approved"),
+        ]);
+        setRejectedDocuments([
+          ...res.filter((document) => document.document_status === "Rejected"),
+        ]);
+        setDocsToShow([
+          ...res.filter(
+            (document) => document.document_status === "PendingApproval"
+          ),
+        ]);
+      });
+    }
   }, []);
 
   const showModal = () => {
@@ -97,21 +140,23 @@ const Dashboard = () => {
           doc_id = res.id;
         })
         .catch((err) => {
-          alert("Error in uploading document", err);
+          console.log(err);
+          // alert("Error in uploading document", err);
         });
-      await requestSignature(getCookie("token"), doc_id, selectedProfs[0])
+      await requestSignature(getCookie("token"), doc_id, selectedProfs)
         .then((res) => {
           console.log(res);
         })
         .catch((err) => {
-          alert("Error in uploading document", err);
+          console.log(err);
+          // alert("Error in uploading document 1", err);
         });
       setIsModalVisible(false);
     }
   };
 
   const onChangeProfs = (value) => {
-    setSelectedProfs(...selectedProfs, value);
+    setSelectedProfs([...value]);
   };
 
   const handleCancel = () => {
@@ -119,18 +164,27 @@ const Dashboard = () => {
   };
 
   const handleNavMenu = (key) => {
-    console.log(key.key);
     switch (key.key) {
       case "1":
         setDocsToShow([...pendingDocuments]);
+        setPendingTab(true);
         break;
       case "2":
         setDocsToShow([...approvedDocument]);
+        setPendingTab(false);
         break;
       case "3":
         setDocsToShow([...rejectedDocument]);
+        setPendingTab(false);
         break;
     }
+  };
+
+  console.log(docsToShow);
+
+  const logout = () => {
+    removeCookie("token");
+    navigate("/");
   };
   if (!userStore.loggedIn) return null;
   return (
@@ -165,6 +219,9 @@ const Dashboard = () => {
             <div className="flex justify-center items-center bg-[#1d88e33d] border border-[#1D88E3] rounded-full text-[#1D88E3] w-10 h-10 font-semibold text-lg">
               {getFirstLetter(userStore.name)}
             </div>
+            <button className="px-2 text-[#1D88E3] text-lg" onClick={logout}>
+              Logout
+            </button>
           </div>
           <div className="text-2xl font-extrabold h-16 flex items-center">
             Hi, Welcome back
@@ -185,19 +242,24 @@ const Dashboard = () => {
                     name={document.name}
                     title={document.title}
                     key={index}
+                    file_id={document.id}
+                    file={document}
+                    isPendingTab={isPendingTab}
                   />
                 );
               })
             )}
           </div>
-          <div className="h-12 flex items-center justify-end mt-4">
-            <button
-              className="h- bg-[#1D88E3] text-white p-2 rounded"
-              onClick={showModal}
-            >
-              New Request +
-            </button>
-          </div>
+          {!userStore.isProf ? (
+            <div className="h-12 flex items-center justify-end mt-4">
+              <button
+                className="h- bg-[#1D88E3] text-white p-2 rounded"
+                onClick={showModal}
+              >
+                New Request +
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
       <Modal
