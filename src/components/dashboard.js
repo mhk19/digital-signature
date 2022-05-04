@@ -1,6 +1,6 @@
 import { Input, Menu, Select } from "antd";
 import Modal from "antd/lib/modal/Modal";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import RequestCol from "./request-col";
 import upload_icon from "../assets/images/upload.svg";
 import { getProfs, getUser } from "../api/authApi";
@@ -53,7 +53,9 @@ const Dashboard = () => {
         isProf = res.isProf;
       })
       .catch((err) => {
+        console.log(err)
         navigate("/");
+        return;
       });
     await getProfs(token)
       .then((res) => {
@@ -140,16 +142,14 @@ const Dashboard = () => {
           doc_id = res.id;
         })
         .catch((err) => {
-          console.log(err);
-          // alert("Error in uploading document", err);
+          alert("Error in uploading document", err);
         });
-      await requestSignature(getCookie("token"), doc_id, selectedProfs)
+      requestSignature(getCookie("token"), doc_id, selectedProfs)
         .then((res) => {
           console.log(res);
         })
         .catch((err) => {
-          console.log(err);
-          // alert("Error in uploading document 1", err);
+          // alert("Error in requesting signature", err);
         });
       setIsModalVisible(false);
     }
@@ -179,8 +179,6 @@ const Dashboard = () => {
         break;
     }
   };
-
-  console.log(docsToShow);
 
   const logout = () => {
     removeCookie("token");

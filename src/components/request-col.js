@@ -56,21 +56,22 @@ const RequestCol = ({ name, title, file_id, isPendingTab }) => {
         res = JSON.parse(res);
       })
       .catch((err) => {
-        alert("Error in uploading document", err);
+        // alert("Error in uploading document", err);
       });
     alert("Approved the request.");
     setIsShowPdfActive(false);
   };
 
-  const handleReject = async () => {
-    await rejectDocument(getCookie("token"), file_id)
-      .then(() => {
+  const handleReject = () => {
+    rejectDocument(getCookie("token"), file_id)
+      .then((res) => {
+        console.log(res);
         alert("Rejected the request.");
-        setIsShowPdfActive(false);
       })
       .catch((err) => {
         alert("Error in rejecting the request");
       });
+    setIsShowPdfActive(false);
   };
 
   useEffect(() => {
@@ -159,14 +160,16 @@ const RequestCol = ({ name, title, file_id, isPendingTab }) => {
       </Modal>
       <Modal
         title="Select area of Signature and click Submit"
-        style={{ height: "100vh" }}
         visible={isShowPdfActive}
         width="80%"
         className="font-[Poppins] text-xl font-semibold"
         footer={null}
+        centered
         onCancel={handleCancel}
       >
-        <div className="overflow-auto h-screen">
+        <div className="overflow-auto"
+                style={{ maxHeight: "70vh" }}
+        >
           <PdfViewer
             url={url}
             enableAreaSelection={useCallback(
