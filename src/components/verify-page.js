@@ -5,6 +5,7 @@ import upload_icon from "../assets/images/upload.svg";
 const VerifyPage = () => {
   const [file, setFile] = useState();
   const [status, setStatus] = useState('');
+  const [approverList, setApproverList] = useState([]);
   const getFile = () => {
     var files = document.getElementById("files").files;
     if (files.length > 0) {
@@ -18,11 +19,13 @@ const VerifyPage = () => {
     verifyDocument(file)
       .then((res) => {
         console.log(res);
-        setStatus('Approved')
+        setStatus('Approved by');
+        setApproverList(JSON.parse(res));
       })
       .catch((err) => {
         console.log(err);
         setStatus('Not Approved')
+        setApproverList([]);
       });
   };
 
@@ -50,6 +53,9 @@ const VerifyPage = () => {
         Verify
       </button>
       <div className="text-lg mt-6">{status}</div>
+      <ul>
+          {approverList.map((user) => <li>{user.name + " (" + user.email +")"}</li> )}
+      </ul>
     </div>
   );
 };

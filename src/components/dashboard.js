@@ -61,7 +61,7 @@ const Dashboard = () => {
       .then((res) => {
         setChildrenProfs([
           ...childrenProfs,
-          ...res.map((r) => ({ id: r.id, name: r.name })),
+          ...res.map((r) => ({ u_id: r.u_id, name: r.name })),
         ]);
       })
       .catch((err) => {
@@ -71,7 +71,7 @@ const Dashboard = () => {
       await getPendingDocumentsForProf(token).then((res) => {
         var pendingDocumentsTemp = [];
         res.forEach(async (document) => {
-          await getSingleDocument(token, document.id).then((res) => {
+          await getSingleDocument(token, document.d_id).then((res) => {
             pendingDocumentsTemp.push(res);
           });
           console.log(pendingDocumentsTemp);
@@ -83,7 +83,7 @@ const Dashboard = () => {
       await getSignedDocumentsForProf(token).then((res) => {
         var signedDocumentsTemp = [];
         res.forEach(async (document) => {
-          await getSingleDocument(token, document.id).then((res) => {
+          await getSingleDocument(token, document.d_id).then((res) => {
             signedDocumentsTemp.push(res);
           });
           console.log(signedDocumentsTemp);
@@ -94,7 +94,7 @@ const Dashboard = () => {
       await getRejectedDocumentsForProf(token).then((res) => {
         var rejectedDocumentsTemp = [];
         res.forEach(async (document) => {
-          await getSingleDocument(token, document.id).then((res) => {
+          await getSingleDocument(token, document.d_id).then((res) => {
             rejectedDocumentsTemp.push(res);
           });
           console.log(rejectedDocumentsTemp);
@@ -157,6 +157,7 @@ const Dashboard = () => {
 
   const onChangeProfs = (value) => {
     setSelectedProfs([...value]);
+    console.log(selectedProfs);
   };
 
   const handleCancel = () => {
@@ -240,7 +241,7 @@ const Dashboard = () => {
                     name={document.name}
                     title={document.title}
                     key={index}
-                    file_id={document.id}
+                    file_id={document.d_id}
                     file={document}
                     isPendingTab={isPendingTab}
                   />
@@ -278,7 +279,7 @@ const Dashboard = () => {
           >
             {childrenProfs.map((prof, index) => {
               return (
-                <Option value={prof.id} key={index}>
+                <Option value={prof.u_id} key={prof.u_id}>
                   {prof.name}
                 </Option>
               );

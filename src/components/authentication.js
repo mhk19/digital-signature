@@ -73,6 +73,15 @@ const AuthPage = () => {
             >
               Sign up
             </button>
+            <button
+              className={`flex w-1/2 h-8 font-[Poppins] justify-center items-center font-semibold border`}
+              onClick={() => {
+                let path = `/verify`;
+                navigate(path);
+              }}
+            >
+              Verify
+            </button>
           </div>
           {type === "login" ? (
             <Login />
