@@ -1,3 +1,5 @@
+/* eslint-disable default-case */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Input, Menu, Select } from "antd";
 import Modal from "antd/lib/modal/Modal";
 import React, { useEffect, useRef, useState } from "react";
@@ -29,6 +31,9 @@ const Dashboard = () => {
   const [pendingDocuments, setPendingDocument] = useState([]);
   const [approvedDocument, setApprovedDocuments] = useState([]);
   const [rejectedDocument, setRejectedDocuments] = useState([]);
+  const [prof_pendingDocuments, setprof_PendingDocument] = useState([]);
+  const [prof_approvedDocument, setprof_ApprovedDocuments] = useState([]);
+  const [prof_rejectedDocument, setprof_RejectedDocuments] = useState([]);
   const [docsToShow, setDocsToShow] = useState([]);
   const [isPendingTab, setPendingTab] = useState(true);
   const navigate = useNavigate();
@@ -53,7 +58,7 @@ const Dashboard = () => {
         isProf = res.isProf;
       })
       .catch((err) => {
-        console.log(err)
+        console.log(err);
         navigate("/");
         return;
       });
@@ -100,6 +105,24 @@ const Dashboard = () => {
           console.log(rejectedDocumentsTemp);
           setRejectedDocuments([...rejectedDocumentsTemp]);
         });
+      });
+      getDocumentsForStudent(getCookie("token")).then((res) => {
+        setprof_PendingDocument([
+          ...res.filter(
+            (document) => document.document_status === "PendingApproval"
+          ),
+        ]);
+        setprof_ApprovedDocuments([
+          ...res.filter((document) => document.document_status === "Approved"),
+        ]);
+        setprof_RejectedDocuments([
+          ...res.filter((document) => document.document_status === "Rejected"),
+        ]);
+        setDocsToShow([
+          ...res.filter(
+            (document) => document.document_status === "PendingApproval"
+          ),
+        ]);
       });
     } else {
       getDocumentsForStudent(getCookie("token")).then((res) => {
@@ -178,6 +201,18 @@ const Dashboard = () => {
         setDocsToShow([...rejectedDocument]);
         setPendingTab(false);
         break;
+      case "4":
+        setDocsToShow([...prof_pendingDocuments]);
+        setPendingTab(true);
+        break;
+      case "5":
+        setDocsToShow([...prof_approvedDocument]);
+        setPendingTab(false);
+        break;
+      case "6":
+        setDocsToShow([...prof_rejectedDocument]);
+        setPendingTab(false);
+        break;
     }
   };
 
@@ -203,14 +238,27 @@ const Dashboard = () => {
             onClick={handleNavMenu}
           >
             <Menu.Item className="flex justify-center" key="1">
-              Pending
+              Pending {userStore.isProf ? <>Signatures</> : <>Documents</>}
             </Menu.Item>
             <Menu.Item className="flex justify-center" key="2">
-              Approved
+              Approved {userStore.isProf ? <>Signatures</> : <>Documents</>}
             </Menu.Item>
             <Menu.Item className="flex justify-center" key="3">
-              Rejected
+              Rejected {userStore.isProf ? <>Signatures</> : <>Documents</>}
             </Menu.Item>
+            {userStore.isProf ? (
+              <>
+                <Menu.Item className="flex justify-center" key="4">
+                  Pending Documents
+                </Menu.Item>
+                <Menu.Item className="flex justify-center" key="5">
+                  Approved Documents
+                </Menu.Item>
+                <Menu.Item className="flex justify-center" key="6">
+                  Rejected Documents
+                </Menu.Item>
+              </>
+            ) : null}
           </Menu>
         </div>
         <div className="w-3/4 p-10">
@@ -221,9 +269,6 @@ const Dashboard = () => {
             <button className="px-2 text-[#1D88E3] text-lg" onClick={logout}>
               Logout
             </button>
-          </div>
-          <div className="text-2xl font-extrabold h-16 flex items-center">
-            Hi, Welcome back
           </div>
           <div className="flex px-4 w-1/2 justify-between text-lg">
             <span>Name</span>
@@ -249,16 +294,14 @@ const Dashboard = () => {
               })
             )}
           </div>
-          {!userStore.isProf ? (
-            <div className="h-12 flex items-center justify-end mt-4">
-              <button
-                className="h- bg-[#1D88E3] text-white p-2 rounded"
-                onClick={showModal}
-              >
-                New Request +
-              </button>
-            </div>
-          ) : null}
+          <div className="h-12 flex items-center justify-end mt-4">
+            <button
+              className="h- bg-[#1D88E3] text-white p-2 rounded"
+              onClick={showModal}
+            >
+              New Request +
+            </button>
+          </div>
         </div>
       </div>
       <Modal
