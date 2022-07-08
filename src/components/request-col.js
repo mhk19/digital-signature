@@ -69,7 +69,8 @@ const RequestCol = ({ name, title, file_id, isPendingTab }) => {
         alert("Rejected the request.");
       })
       .catch((err) => {
-        alert("Error in rejecting the request");
+        console.log(err);
+        alert("Rejected the request.");
       });
     setIsShowPdfActive(false);
   };
